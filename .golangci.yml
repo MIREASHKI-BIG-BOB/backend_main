@@ -1,0 +1,58 @@
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+output:
+  formats: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/MIREASHKI-BIG-BOB/backend_main
+    
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/MIREASHKI-BIG-BOB/backend_main)
+    skip-generated: true
+    custom-order: true
+
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    
+  gocyclo:
+    min-complexity: 15
+    
+  dupl:
+    threshold: 100
+    
+  misspell:
+    locale: US
+
+linters:
+  enable:
+    - errcheck      # проверка обработки ошибок
+    - gosimple      # упрощение кода
+    - ineffassign   # неиспользуемые присваивания
+    - staticcheck   # статический анализ
+    - typecheck     # проверка типов
+    - unused        # неиспользуемые переменные/функции
+    - goimports     # форматирование импортов
+    - gci           # группировка импортов (3 типа!)
+    - gofmt         # форматирование кода
+    - misspell      # опечатки
+    - revive        # линтер вместо golint
+    - dupl          # дублирующийся код
+    - gocyclo       # циклическая сложность
+
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - gocyclo
