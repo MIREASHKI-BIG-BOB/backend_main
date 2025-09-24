@@ -10,6 +10,12 @@ import (
 
 type Env string
 
+func (e Env) String() string { return string(e) }
+
+const (
+	EnvDev Env = "dev"
+)
+
 type Config struct {
 	Env    Env    `yaml:"env"`
 	Server Server `yaml:"server"`
