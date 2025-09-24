@@ -1,9 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -16,8 +16,10 @@ type Config struct {
 }
 
 type Server struct {
-	Addr string `yaml:"addr"`
-	Port string `yaml:"port"`
+	Addr         string        `yaml:"addr"`
+	Port         string        `yaml:"port"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
 }
 
 func ReadConfig(path string) (*Config, error) {
@@ -33,11 +35,9 @@ func ReadConfig(path string) (*Config, error) {
 	}
 
 	cfg := &Config{}
-	if err := yaml.Unmarshal(data, cfg); err != nil {
+	if err = yaml.Unmarshal(data, cfg); err != nil {
 		return nil, err
 	}
-
-	fmt.Println(*cfg)
 
 	return cfg, nil
 }
