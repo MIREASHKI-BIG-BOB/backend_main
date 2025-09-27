@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/services"
+	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/services"
 )
 
 type Handler struct {

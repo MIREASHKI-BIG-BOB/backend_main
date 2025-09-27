@@ -8,8 +8,8 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/MIREASHKI-BIG-BOB/backend_main/config"
-	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/services"
 	healthHandler "github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/http/health"
+	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/services"
 )
 
 type Server struct {
