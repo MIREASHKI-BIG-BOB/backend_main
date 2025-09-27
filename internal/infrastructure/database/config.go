@@ -5,6 +5,6 @@ type Config struct {
 	Addr   string `yaml:"addr"`
 	Port   string `yaml:"port"`
 	DB     string `yaml:"db"`
-	User   string `yaml:"user" envconfig:"DB_USER"`
-	Pass   string `yaml:"pass" envconfig:"DB_PASS"`
+	User   string `yaml:"user"   envconfig:"DB_USER"`
+	Pass   string `yaml:"pass"   envconfig:"DB_PASS"`
 }

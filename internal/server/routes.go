@@ -20,4 +20,8 @@ func (s *Server) initRouter() {
 	s.router.Route("/api", func(r chi.Router) {
 		r.Get("/health", s.healthHandler.HealthCheck)
 	})
+
+	s.router.Route("/ws", func(r chi.Router) {
+		r.HandleFunc("/sensor", s.sensorHandler.HandleWebSocket)
+	})
 }

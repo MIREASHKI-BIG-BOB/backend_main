@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 )
 
 type DB struct {
@@ -21,14 +20,14 @@ func Connect(ctx context.Context, cfg *Config) (*DB, error) {
 		return nil, errors.New("empty pass")
 	}
 
-	url := toUrl(cfg.Addr, cfg.Port, cfg.DB, cfg.User, cfg.Pass)
+	url := toURL(cfg.Addr, cfg.Port, cfg.DB, cfg.User, cfg.Pass)
 
 	db, err := sqlx.ConnectContext(ctx, "postgres", url)
 	if err != nil {
 		return nil, fmt.Errorf("sqlx connect: %w, url: %v", err, url)
 	}
 
-	if db.Ping() != nil {
+	if err = db.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("ping: %w", err)
 	}
 

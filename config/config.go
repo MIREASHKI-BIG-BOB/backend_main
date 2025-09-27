@@ -17,8 +17,9 @@ const (
 )
 
 type Config struct {
-	Env    Env    `yaml:"env"`
-	Server Server `yaml:"server"`
+	Env     Env     `yaml:"env"`
+	Server  Server  `yaml:"server"`
+	Sensors Sensors `yaml:"sensors"`
 }
 
 type Server struct {
@@ -26,6 +27,16 @@ type Server struct {
 	Port         string        `yaml:"port"`
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
+}
+
+type Sensors struct {
+	HandshakeTimeout time.Duration  `yaml:"handshake_timeout"`
+	Entities         []SensorEntity `yaml:"entities"`
+}
+
+type SensorEntity struct {
+	UUID  string `yaml:"uuid"`
+	Token string `yaml:"token"`
 }
 
 func ReadConfig(path string) (*Config, error) {

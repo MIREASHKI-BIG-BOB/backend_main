@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/fs"
 
-	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 )
 
@@ -17,7 +16,7 @@ var (
 	migrations embed.FS
 )
 
-func Migrate(ctx context.Context, cfg *Config) error {
+func Migrate(_ context.Context, cfg *Config) error {
 	if err := migrate(cfg, "migrations", migrations); err != nil {
 		return fmt.Errorf("migrate: %w", err)
 	}
@@ -33,7 +32,7 @@ func migrate(cfg *Config, dir string, fsys fs.FS) error {
 		return errors.New("empty pass")
 	}
 
-	url := toUrl(cfg.Addr, cfg.Port, cfg.DB, cfg.User, cfg.Pass)
+	url := toURL(cfg.Addr, cfg.Port, cfg.DB, cfg.User, cfg.Pass)
 
 	db, err := sql.Open("postgres", url)
 	if err != nil {
@@ -54,7 +53,7 @@ func migrate(cfg *Config, dir string, fsys fs.FS) error {
 	return nil
 }
 
-func toUrl(host, port, dbName, user, password string) string {
+func toURL(host, port, dbName, user, password string) string {
 	return fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		host, port, dbName, user, password,
