@@ -15,3 +15,7 @@ sensors:
       token: "GdX7DHeLf2S6hTRrBo5k8xVNV2FFrtqfBnO319MOkspvDxVDmnDXGKWZT3upR4NW"
     - uuid: "0ca9ac23-912a-4900-881a-1bda8aa304a5"
       token: "vpJ5HQc6THBZKwVZpAS9cjegZDnVz2HwAOtLX7YMGRqYYX61SleAmVh9xs9ful3Q"
+
+db:
+  driver: "sqlite3"
+  dsn: "./data.db"

@@ -9,11 +9,11 @@ CREATE TABLE IF NOT EXISTS medicals (
     email VARCHAR(30) NOT NULL,
     license_number INTEGER NOT NULL UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+    );
 
 CREATE TABLE IF NOT EXISTS doctors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(25) NOT NULL,
+    name VARCHAR(15) NOT NULL,
     phone VARCHAR(11) NOT NULL,
     specialization VARCHAR(20) NOT NULL,
     license_number INTEGER NOT NULL UNIQUE,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS doctors (
     is_active BOOLEAN DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (med_id) REFERENCES medicals(id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS examinations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS examinations (
     FOREIGN KEY (doctor_id) REFERENCES doctors(id),
     FOREIGN KEY (created_by) REFERENCES doctors(id),
     FOREIGN KEY (updated_by) REFERENCES doctors(id)
-);
+    );
 
 CREATE TABLE IF NOT EXISTS ctg (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS ctg (
     spasms REAL DEFAULT 0.0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (examination_id) REFERENCES examinations(id)
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_examinations_client_id ON examinations(client_id);
 CREATE INDEX IF NOT EXISTS idx_examinations_doctor_id ON examinations(doctor_id);
@@ -64,11 +64,11 @@ CREATE INDEX IF NOT EXISTS idx_ctg_created_at ON ctg(created_at);
 CREATE INDEX IF NOT EXISTS idx_doctors_med_id ON doctors(med_id);
 CREATE INDEX IF NOT EXISTS idx_doctors_is_active ON doctors(is_active);
 
-INSERT INTO medicals (name, address, phone, email, license_number) VALUES 
-('Чухановская больница №1', 'ул. Баковка, 15', '84956756975', 'jeans@med.ru', 12345);
+INSERT INTO medicals (name, address, phone, email, license_number) VALUES
+    ('Чухановская больница №1', 'ул. Медицинская, 15', '84956756975', 'hospital1@med.ru', 12345);
 
-INSERT INTO doctors (name, phone, specialization, license_number, med_id) VALUES 
-('Трусов К.Д.', '79161234567', 'Акушер-гинеколог', 67890, 1);
+INSERT INTO doctors (name, phone, specialization, license_number, med_id) VALUES
+    ('Стринченко Кеша Владимирович', '79161234567', 'Акушер-гинеколог', 67890, 1);
 
 -- +goose StatementEnd
 

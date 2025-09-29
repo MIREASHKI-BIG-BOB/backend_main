@@ -20,6 +20,7 @@ type Config struct {
 	Env     Env     `yaml:"env"`
 	Server  Server  `yaml:"server"`
 	Sensors Sensors `yaml:"sensors"`
+	DB      DB      `yaml:"db"`
 }
 
 type Server struct {
@@ -37,6 +38,11 @@ type Sensors struct {
 type SensorEntity struct {
 	UUID  string `yaml:"uuid"`
 	Token string `yaml:"token"`
+}
+
+type DB struct {
+	Driver string `yaml:"driver"`
+	DSN    string `yaml:"dsn"`
 }
 
 func ReadConfig(path string) (*Config, error) {

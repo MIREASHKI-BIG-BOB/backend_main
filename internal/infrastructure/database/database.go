@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type DB struct {
@@ -13,18 +14,16 @@ type DB struct {
 }
 
 func Connect(ctx context.Context, cfg *Config) (*DB, error) {
-	if cfg.User == "" {
-		return nil, errors.New("empty user")
+	if cfg.Driver == "" {
+		return nil, errors.New("empty driver")
 	}
-	if cfg.Pass == "" {
-		return nil, errors.New("empty pass")
+	if cfg.DSN == "" {
+		return nil, errors.New("empty dsn")
 	}
 
-	url := toURL(cfg.Addr, cfg.Port, cfg.DB, cfg.User, cfg.Pass)
-
-	db, err := sqlx.ConnectContext(ctx, "postgres", url)
+	db, err := sqlx.ConnectContext(ctx, cfg.Driver, cfg.DSN)
 	if err != nil {
-		return nil, fmt.Errorf("sqlx connect: %w, url: %v", err, url)
+		return nil, fmt.Errorf("sqlx connect: %w, dsn: %v", err, cfg.DSN)
 	}
 
 	if err = db.PingContext(ctx); err != nil {

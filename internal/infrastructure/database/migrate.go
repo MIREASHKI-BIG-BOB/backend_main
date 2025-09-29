@@ -25,16 +25,14 @@ func Migrate(_ context.Context, cfg *Config) error {
 }
 
 func migrate(cfg *Config, dir string, fsys fs.FS) error {
-	if cfg.User == "" {
-		return errors.New("empty user")
+	if cfg.Driver == "" {
+		return errors.New("empty driver")
 	}
-	if cfg.Pass == "" {
-		return errors.New("empty pass")
+	if cfg.DSN == "" {
+		return errors.New("empty dsn")
 	}
 
-	url := toURL(cfg.Addr, cfg.Port, cfg.DB, cfg.User, cfg.Pass)
-
-	db, err := sql.Open("postgres", url)
+	db, err := sql.Open(cfg.Driver, cfg.DSN)
 	if err != nil {
 		return fmt.Errorf("sql open: %w", err)
 	}
@@ -42,7 +40,7 @@ func migrate(cfg *Config, dir string, fsys fs.FS) error {
 
 	goose.SetBaseFS(fsys)
 
-	if err = goose.SetDialect("postgres"); err != nil {
+	if err = goose.SetDialect("sqlite3"); err != nil {
 		return fmt.Errorf("set dialect: %w", err)
 	}
 
@@ -51,11 +49,4 @@ func migrate(cfg *Config, dir string, fsys fs.FS) error {
 	}
 
 	return nil
-}
-
-func toURL(host, port, dbName, user, password string) string {
-	return fmt.Sprintf(
-		"host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
-		host, port, dbName, user, password,
-	)
 }

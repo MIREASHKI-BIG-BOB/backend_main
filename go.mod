@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/gorilla/websocket v1.5.3
 	github.com/jmoiron/sqlx v1.4.0
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/pressly/goose/v3 v3.25.0
 	gopkg.in/yaml.v3 v3.0.1
 )

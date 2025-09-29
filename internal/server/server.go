@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -11,28 +12,24 @@ import (
 	"github.com/MIREASHKI-BIG-BOB/backend_main/config"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/adapters/websocket/sensors"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/services"
+	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/database"
 	healthHandler "github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/http/health"
 )
 
 type Server struct {
 	cfg    *config.Config
 	logger *slog.Logger
+	db     *database.DB
 
-	// services
 	healthService *services.HealthService
-
-	// handlers
-	// http
 	healthHandler *healthHandler.Handler
-	// ws
 	sensorHandler *sensors.Handler
 
-	// infrastructure
 	router *chi.Mux
 	server *http.Server
 }
 
-func New(cfg *config.Config) (*Server, error) {
+func New(cfg *config.Config, _ *database.DB) (*Server, error) {
 	s := &Server{
 		cfg:    cfg,
 		logger: slog.Default(),
@@ -46,10 +43,35 @@ func New(cfg *config.Config) (*Server, error) {
 }
 
 func (s *Server) init() error {
+	if err := s.initDB(); err != nil {
+		return fmt.Errorf("init db: %v", err)
+	}
+
 	s.initServices()
 	s.initHandlers()
 	s.initRouter()
 	s.initHTTPServer()
+
+	return nil
+}
+
+func (s *Server) initDB() error {
+	ctx := context.Background()
+	db, err := database.Connect(ctx, &database.Config{
+		Driver: s.cfg.DB.Driver,
+		DSN:    s.cfg.DB.DSN,
+	})
+	if err != nil {
+		return err
+	}
+	s.db = db
+
+	if err := database.Migrate(ctx, &database.Config{
+		Driver: s.cfg.DB.Driver,
+		DSN:    s.cfg.DB.DSN,
+	}); err != nil {
+		return fmt.Errorf("migrate db: %v", err)
+	}
 
 	return nil
 }
@@ -59,9 +81,7 @@ func (s *Server) initServices() {
 }
 
 func (s *Server) initHandlers() {
-	// http
 	s.healthHandler = healthHandler.New(s.healthService)
-	// ws
 	s.initSensorHandlers()
 }
 
