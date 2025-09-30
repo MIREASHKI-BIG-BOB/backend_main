@@ -17,5 +17,5 @@ sensors:
       token: "vpJ5HQc6THBZKwVZpAS9cjegZDnVz2HwAOtLX7YMGRqYYX61SleAmVh9xs9ful3Q"
 
 db:
-  driver: "sqlite3"
+  driver: "sqlite"
   dsn: "./data.db"

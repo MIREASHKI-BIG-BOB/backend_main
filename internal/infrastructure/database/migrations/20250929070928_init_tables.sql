@@ -68,7 +68,7 @@ INSERT INTO medicals (name, address, phone, email, license_number) VALUES
     ('Чухановская больница №1', 'ул. Медицинская, 15', '84956756975', 'hospital1@med.ru', 12345);
 
 INSERT INTO doctors (name, phone, specialization, license_number, med_id) VALUES
-    ('Стринченко Кеша Владимирович', '79161234567', 'Акушер-гинеколог', 67890, 1);
+    ('Стринченко Кеша', '79161234567', 'Акушер-гинеколог', 67890, 1);
 
 -- +goose StatementEnd
 

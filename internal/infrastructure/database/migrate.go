@@ -9,6 +9,7 @@ import (
 	"io/fs"
 
 	"github.com/pressly/goose/v3"
+	_ "modernc.org/sqlite"
 )
 
 var (
@@ -40,7 +41,7 @@ func migrate(cfg *Config, dir string, fsys fs.FS) error {
 
 	goose.SetBaseFS(fsys)
 
-	if err = goose.SetDialect("sqlite3"); err != nil {
+	if err = goose.SetDialect("sqlite"); err != nil {
 		return fmt.Errorf("set dialect: %w", err)
 	}
 

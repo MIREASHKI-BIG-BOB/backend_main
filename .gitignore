@@ -23,7 +23,7 @@ go.work
 .idea/
 *.swp
 *.swo
-
+S
 # OS files
 .DS_Store
 Thumbs.db
@@ -31,3 +31,6 @@ Thumbs.db
 # Environment files
 .env
 .env.local
+
+
+*.db
