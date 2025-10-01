@@ -2,13 +2,13 @@ env: "dev"
 
 server:
   addr: "localhost"
-  port: "8080"
+  port: "8000"
   read_timeout: "10s"
   write_timeout: "10s"
 
 ml:
   addr: "localhost"
-  port: "8081"
+  port: "8010"
 
 sensors:
   handshake_timeout: "10s"

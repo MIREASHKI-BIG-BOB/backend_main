@@ -18,6 +18,6 @@ WORKDIR /app
 COPY --from=builder /build/backend-main .
 COPY --from=builder /build/config ./config
 
-EXPOSE 8080
+EXPOSE 8000
 
 CMD ["./backend-main", "-c", "config/config.yaml"]
