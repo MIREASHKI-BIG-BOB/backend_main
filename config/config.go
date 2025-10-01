@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -75,5 +76,16 @@ func ReadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	overrideSensorIPs(cfg)
+
 	return cfg, nil
+}
+
+func overrideSensorIPs(cfg *Config) {
+	for i := range cfg.Sensors.Entities {
+		// ENV переменная: SENSOR_IP_X (1/2/...)
+		if ip := os.Getenv(fmt.Sprintf("SENSOR_IP_%d", i+1)); ip != "" {
+			cfg.Sensors.Entities[i].IP = ip
+		}
+	}
 }
