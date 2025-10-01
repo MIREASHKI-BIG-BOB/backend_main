@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,13 +22,19 @@ type Config struct {
 	Server  Server  `yaml:"server"`
 	Sensors Sensors `yaml:"sensors"`
 	DB      DB      `yaml:"db"`
+	ML      ML      `yaml:"ml"`
 }
 
 type Server struct {
-	Addr         string        `yaml:"addr"`
-	Port         string        `yaml:"port"`
+	Addr         string        `yaml:"addr" envconfig:"SERVER_ADDR"`
+	Port         string        `yaml:"port" envconfig:"SERVER_PORT"`
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
+}
+
+type ML struct {
+	Addr string `yaml:"addr" envconfig:"ML_ADDR"`
+	Port string `yaml:"port" envconfig:"ML_PORT"`
 }
 
 type Sensors struct {
@@ -60,6 +67,11 @@ func ReadConfig(path string) (*Config, error) {
 
 	cfg := &Config{}
 	if err = yaml.Unmarshal(data, cfg); err != nil {
+		return nil, err
+	}
+
+	// Читаем переменные окружения
+	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
 	}
 

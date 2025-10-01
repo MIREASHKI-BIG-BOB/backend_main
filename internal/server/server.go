@@ -110,7 +110,14 @@ func (s *Server) initSensorHandlers() {
 	// Создаем репозиторий для examinations
 	examinationRepo := examRepo.NewExamRepository(s.db)
 
-	s.sensorHandler = sensors.NewHandler(sensorCfg, s.logger, examinationRepo, s.frontendHandler)
+	s.sensorHandler = sensors.NewHandler(
+		sensorCfg,
+		s.logger,
+		examinationRepo,
+		s.frontendHandler,
+		s.cfg.ML.Addr,
+		s.cfg.ML.Port,
+	)
 }
 
 func (s *Server) initHTTPServer() {

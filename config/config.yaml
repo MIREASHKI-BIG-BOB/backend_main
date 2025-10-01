@@ -6,6 +6,10 @@ server:
   read_timeout: "10s"
   write_timeout: "10s"
 
+ml:
+  addr: "localhost"
+  port: "8081"
+
 sensors:
   handshake_timeout: "10s"
   entities:

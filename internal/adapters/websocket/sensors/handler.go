@@ -3,14 +3,16 @@ package sensors
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/entities"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/ports/repository"
-	"github.com/gorilla/websocket"
 )
 
 const (
@@ -32,6 +34,8 @@ type Handler struct {
 	mlWSClient      *websocket.Conn
 	mlWSMutex       sync.Mutex
 	frontendHandler FrontendBroadcaster
+	mlAddr          string
+	mlPort          string
 }
 
 type FrontendBroadcaster interface {
@@ -43,6 +47,8 @@ func NewHandler(
 	logger *slog.Logger,
 	examRepo repository.ExamRepository,
 	frontendHandler FrontendBroadcaster,
+	mlAddr string,
+	mlPort string,
 ) *Handler {
 	h := &Handler{
 		cfg:             cfg,
@@ -50,6 +56,8 @@ func NewHandler(
 		logger:          logger,
 		examRepo:        examRepo,
 		frontendHandler: frontendHandler,
+		mlAddr:          mlAddr,
+		mlPort:          mlPort,
 		upgrader: websocket.Upgrader{
 			HandshakeTimeout: cfg.HandshakeTimeout,
 			CheckOrigin: func(_ *http.Request) bool {
@@ -64,7 +72,7 @@ func NewHandler(
 }
 
 func (h *Handler) connectToMLService() {
-	mlURL := "ws://localhost:8081/ws/ctg"
+	mlURL := fmt.Sprintf("ws://%s:%s/ws/ctg", h.mlAddr, h.mlPort)
 
 	for {
 		conn, _, err := websocket.DefaultDialer.Dial(mlURL, nil)
@@ -230,7 +238,7 @@ func (h *Handler) listenClient(client *Client) {
 			) {
 				client.Logger.Error("WebSocket unexpectedly closed", "error", err)
 			}
-			break 
+			break
 		}
 
 		var messageData MessageData

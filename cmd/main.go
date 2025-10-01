@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/MIREASHKI-BIG-BOB/backend_main/config"
@@ -8,7 +9,10 @@ import (
 )
 
 func main() {
-	cfg, err := config.ReadConfig("config/config.yaml")
+	cfgPath := flag.String("c", "config/config.yaml", "path to config file")
+	flag.Parse()
+
+	cfg, err := config.ReadConfig(*cfgPath)
 	if err != nil {
 		log.Fatal(err)
 	}
