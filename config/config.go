@@ -38,6 +38,7 @@ type Sensors struct {
 type SensorEntity struct {
 	UUID  string `yaml:"uuid"`
 	Token string `yaml:"token"`
+	IP    string `yaml:"ip"`
 }
 
 type DB struct {

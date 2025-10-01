@@ -15,6 +15,8 @@ import (
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/services"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/database"
 	healthHandler "github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/http/health"
+	sensorsHandler "github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/http/sensors"
+	sensorsUseCase "github.com/MIREASHKI-BIG-BOB/backend_main/internal/usecases/sensors"
 )
 
 type Server struct {
@@ -22,9 +24,12 @@ type Server struct {
 	logger *slog.Logger
 	db     *database.DB
 
-	healthService *services.HealthService
-	healthHandler *healthHandler.Handler
-	sensorHandler *sensors.Handler
+	healthService  *services.HealthService
+	sensorsUseCase sensorsUseCase.SensorsUseCase
+
+	healthHandler  *healthHandler.Handler
+	sensorsHandler *sensorsHandler.Handler
+	sensorHandler  *sensors.Handler
 
 	router *chi.Mux
 	server *http.Server
@@ -79,10 +84,12 @@ func (s *Server) initDB() error {
 
 func (s *Server) initServices() {
 	s.healthService = services.NewHealthService()
+	s.sensorsUseCase = sensorsUseCase.NewSensorsUseCase(s.cfg, s.logger)
 }
 
 func (s *Server) initHandlers() {
 	s.healthHandler = healthHandler.New(s.healthService)
+	s.sensorsHandler = sensorsHandler.New(s.sensorsUseCase)
 	s.initSensorHandlers()
 }
 

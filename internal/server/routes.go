@@ -19,6 +19,11 @@ func (s *Server) initRouter() {
 	// Routing
 	s.router.Route("/api", func(r chi.Router) {
 		r.Get("/health", s.healthHandler.HealthCheck)
+
+		r.Route("/sensors", func(r chi.Router) {
+			r.Get("/start", s.sensorsHandler.StartSensor)
+			r.Get("/stop", s.sensorsHandler.StopAllSensors)
+		})
 	})
 
 	s.router.Route("/ws", func(r chi.Router) {

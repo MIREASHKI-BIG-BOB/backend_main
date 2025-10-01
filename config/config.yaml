@@ -11,10 +11,13 @@ sensors:
   entities:
     - uuid: "4bf1577c-eeda-4c5b-bcd0-fcc01f25f1fe"
       token: "74QMBHLhnqcB1Q3oYcd8Ns60tvEjoePqT7G44kpSQ8XV9w3XiW6O0nc8yYPAxwe5"
+      ip: "localhost:8082"
     - uuid: "bf50b26c-33e0-41a8-a8e9-69922c9e3496"
       token: "GdX7DHeLf2S6hTRrBo5k8xVNV2FFrtqfBnO319MOkspvDxVDmnDXGKWZT3upR4NW"
+      ip: "localhost:8083"
     - uuid: "0ca9ac23-912a-4900-881a-1bda8aa304a5"
       token: "vpJ5HQc6THBZKwVZpAS9cjegZDnVz2HwAOtLX7YMGRqYYX61SleAmVh9xs9ful3Q"
+      ip: "localhost:8084"
 
 db:
   driver: "sqlite"
