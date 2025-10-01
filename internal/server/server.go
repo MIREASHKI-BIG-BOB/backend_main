@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/MIREASHKI-BIG-BOB/backend_main/config"
+	examRepo "github.com/MIREASHKI-BIG-BOB/backend_main/internal/adapters/repository"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/adapters/websocket/sensors"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/services"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/database"
@@ -95,7 +96,11 @@ func (s *Server) initSensorHandlers() {
 		AllowedSensorsToToken: allowedSensorsToToken,
 		HandshakeTimeout:      s.cfg.Sensors.HandshakeTimeout,
 	}
-	s.sensorHandler = sensors.NewHandler(sensorCfg, s.logger)
+
+	// Создаем репозиторий для examinations
+	examinationRepo := examRepo.NewExamRepository(s.db)
+
+	s.sensorHandler = sensors.NewHandler(sensorCfg, s.logger, examinationRepo)
 }
 
 func (s *Server) initHTTPServer() {

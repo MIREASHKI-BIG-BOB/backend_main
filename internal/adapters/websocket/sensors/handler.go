@@ -1,11 +1,14 @@
 package sensors
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
 
+	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/entities"
+	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/ports/repository"
 	"github.com/gorilla/websocket"
 )
 
@@ -24,16 +27,19 @@ type Handler struct {
 	hub      *Hub
 	logger   *slog.Logger
 	upgrader websocket.Upgrader
+	examRepo repository.ExamRepository
 }
 
 func NewHandler(
 	cfg *Config,
 	logger *slog.Logger,
+	examRepo repository.ExamRepository,
 ) *Handler {
 	return &Handler{
-		cfg:    cfg,
-		hub:    NewHub(logger),
-		logger: logger,
+		cfg:      cfg,
+		hub:      NewHub(logger),
+		logger:   logger,
+		examRepo: examRepo,
 		upgrader: websocket.Upgrader{
 			HandshakeTimeout: cfg.HandshakeTimeout,
 			CheckOrigin: func(_ *http.Request) bool {
@@ -68,6 +74,27 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Проверяем нужно ли создать новое обследование
+	ctx := context.Background()
+	needsNew, err := h.examRepo.NeedsNewExamination(ctx)
+	if err != nil {
+		h.logger.Error("Failed to check if new examination is needed", slog.Any("error", err))
+		conn.Close()
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// Если нужно - создаем новое обследование
+	if needsNew {
+		if err := h.examRepo.CreateExamination(ctx); err != nil {
+			h.logger.Error("Failed to create examination", slog.Any("error", err))
+			conn.Close()
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		h.logger.Info("Created new examination")
+	}
+
 	// Создаем логгер для этого конкретного соединения с метаданными
 	connLogger := h.logger.With(
 		"sensor_id", sensorID,
@@ -98,7 +125,18 @@ func (h *Handler) listenClient(client *Client) {
 			return
 		}
 
-		client.Logger.Info("Sensor disconnected", "remaining_clients", h.hub.GetClientCount())
+		remainingClients := h.hub.GetClientCount()
+		client.Logger.Info("Sensor disconnected", "remaining_clients", remainingClients)
+
+		// Если клиентов больше не осталось - закрываем текущее обследование
+		if remainingClients == 0 {
+			ctx := context.Background()
+			if err := h.examRepo.CloseLastExamination(ctx); err != nil {
+				client.Logger.Error("Failed to close examination", "error", err)
+			} else {
+				client.Logger.Info("Examination closed - no clients remaining")
+			}
+		}
 	}()
 
 	for {
@@ -123,8 +161,27 @@ func (h *Handler) listenClient(client *Client) {
 			continue // Пропускаем невалидные сообщения
 		}
 
-		client.Logger.Info("Received sensor data", "data", messageData)
+		client.Logger.Info("Received sensor data",
+			"sec_from_start", messageData.SecFromStart,
+			"bpm", messageData.Data.BPMChild,
+			"uterus", messageData.Data.Uterus,
+			"spasms", messageData.Data.Spasms,
+		)
 
-		// TODO: Сохранить данные в базу или отправить дальше
+		ctgData := entities.CTGData{
+			SensorID:     client.SensorID,
+			SecFromStart: messageData.SecFromStart,
+			BPMChild:     messageData.Data.BPMChild,
+			Uterus:       messageData.Data.Uterus,
+			Spasms:       messageData.Data.Spasms,
+		}
+
+		ctx := context.Background()
+		if err := h.examRepo.AddCtgRow(ctx, ctgData); err != nil {
+			client.Logger.Error("Failed to save CTG data", "error", err)
+			continue
+		}
+
+		client.Logger.Debug("CTG data saved successfully")
 	}
 }
