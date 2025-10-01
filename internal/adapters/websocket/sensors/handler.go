@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/entities"
@@ -23,11 +24,13 @@ type Config struct {
 }
 
 type Handler struct {
-	cfg      *Config
-	hub      *Hub
-	logger   *slog.Logger
-	upgrader websocket.Upgrader
-	examRepo repository.ExamRepository
+	cfg        *Config
+	hub        *Hub
+	logger     *slog.Logger
+	upgrader   websocket.Upgrader
+	examRepo   repository.ExamRepository
+	mlWSClient *websocket.Conn
+	mlWSMutex  sync.Mutex
 }
 
 func NewHandler(
@@ -35,7 +38,7 @@ func NewHandler(
 	logger *slog.Logger,
 	examRepo repository.ExamRepository,
 ) *Handler {
-	return &Handler{
+	h := &Handler{
 		cfg:      cfg,
 		hub:      NewHub(logger),
 		logger:   logger,
@@ -47,6 +50,78 @@ func NewHandler(
 			},
 		},
 	}
+
+	// Подключаемся к ML сервису
+	go h.connectToMLService()
+
+	return h
+}
+
+func (h *Handler) connectToMLService() {
+	mlURL := "ws://localhost:8081/ws/ctg"
+
+	for {
+		conn, _, err := websocket.DefaultDialer.Dial(mlURL, nil)
+		if err != nil {
+			h.logger.Error("Failed to connect to ML service", "error", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		h.mlWSMutex.Lock()
+		h.mlWSClient = conn
+		h.mlWSMutex.Unlock()
+
+		h.logger.Info("Connected to ML service", "url", mlURL)
+
+		// Слушаем ответы от ML сервиса
+		h.listenMLService(conn)
+
+		h.logger.Warn("ML service connection lost, reconnecting...")
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func (h *Handler) listenMLService(conn *websocket.Conn) {
+	defer func() {
+		h.mlWSMutex.Lock()
+		h.mlWSClient = nil
+		h.mlWSMutex.Unlock()
+		conn.Close()
+	}()
+
+	for {
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			h.logger.Error("Error reading from ML service", "error", err)
+			return
+		}
+
+		h.logger.Info("Received response from ML service", "response", string(message))
+	}
+}
+
+func (h *Handler) sendToMLService(data entities.CTGData) {
+	h.mlWSMutex.Lock()
+	defer h.mlWSMutex.Unlock()
+
+	if h.mlWSClient == nil {
+		h.logger.Warn("ML service not connected, skipping")
+		return
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		h.logger.Error("Failed to marshal CTG data", "error", err)
+		return
+	}
+
+	if err := h.mlWSClient.WriteMessage(websocket.TextMessage, jsonData); err != nil {
+		h.logger.Error("Failed to send data to ML service", "error", err)
+		return
+	}
+
+	h.logger.Debug("Sent data to ML service", "sensor_id", data.SensorID)
 }
 
 func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -183,5 +258,6 @@ func (h *Handler) listenClient(client *Client) {
 		}
 
 		client.Logger.Debug("CTG data saved successfully")
+		h.sendToMLService(ctgData)
 	}
 }
