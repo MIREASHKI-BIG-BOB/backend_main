@@ -11,6 +11,7 @@ import (
 
 	"github.com/MIREASHKI-BIG-BOB/backend_main/config"
 	examRepo "github.com/MIREASHKI-BIG-BOB/backend_main/internal/adapters/repository"
+	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/adapters/websocket/frontend"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/adapters/websocket/sensors"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/services"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/database"
@@ -27,9 +28,10 @@ type Server struct {
 	healthService  *services.HealthService
 	sensorsUseCase sensorsUseCase.SensorsUseCase
 
-	healthHandler  *healthHandler.Handler
-	sensorsHandler *sensorsHandler.Handler
-	sensorHandler  *sensors.Handler
+	healthHandler   *healthHandler.Handler
+	sensorsHandler  *sensorsHandler.Handler
+	sensorHandler   *sensors.Handler
+	frontendHandler *frontend.Handler
 
 	router *chi.Mux
 	server *http.Server
@@ -90,6 +92,7 @@ func (s *Server) initServices() {
 func (s *Server) initHandlers() {
 	s.healthHandler = healthHandler.New(s.healthService)
 	s.sensorsHandler = sensorsHandler.New(s.sensorsUseCase)
+	s.frontendHandler = frontend.NewHandler(s.logger)
 	s.initSensorHandlers()
 }
 
@@ -107,7 +110,7 @@ func (s *Server) initSensorHandlers() {
 	// Создаем репозиторий для examinations
 	examinationRepo := examRepo.NewExamRepository(s.db)
 
-	s.sensorHandler = sensors.NewHandler(sensorCfg, s.logger, examinationRepo)
+	s.sensorHandler = sensors.NewHandler(sensorCfg, s.logger, examinationRepo, s.frontendHandler)
 }
 
 func (s *Server) initHTTPServer() {

@@ -24,25 +24,32 @@ type Config struct {
 }
 
 type Handler struct {
-	cfg        *Config
-	hub        *Hub
-	logger     *slog.Logger
-	upgrader   websocket.Upgrader
-	examRepo   repository.ExamRepository
-	mlWSClient *websocket.Conn
-	mlWSMutex  sync.Mutex
+	cfg             *Config
+	hub             *Hub
+	logger          *slog.Logger
+	upgrader        websocket.Upgrader
+	examRepo        repository.ExamRepository
+	mlWSClient      *websocket.Conn
+	mlWSMutex       sync.Mutex
+	frontendHandler FrontendBroadcaster
+}
+
+type FrontendBroadcaster interface {
+	BroadcastToFrontend(message []byte)
 }
 
 func NewHandler(
 	cfg *Config,
 	logger *slog.Logger,
 	examRepo repository.ExamRepository,
+	frontendHandler FrontendBroadcaster,
 ) *Handler {
 	h := &Handler{
-		cfg:      cfg,
-		hub:      NewHub(logger),
-		logger:   logger,
-		examRepo: examRepo,
+		cfg:             cfg,
+		hub:             NewHub(logger),
+		logger:          logger,
+		examRepo:        examRepo,
+		frontendHandler: frontendHandler,
 		upgrader: websocket.Upgrader{
 			HandshakeTimeout: cfg.HandshakeTimeout,
 			CheckOrigin: func(_ *http.Request) bool {
@@ -51,7 +58,6 @@ func NewHandler(
 		},
 	}
 
-	// Подключаемся к ML сервису
 	go h.connectToMLService()
 
 	return h
@@ -74,11 +80,10 @@ func (h *Handler) connectToMLService() {
 
 		h.logger.Info("Connected to ML service", "url", mlURL)
 
-		// Слушаем ответы от ML сервиса
 		h.listenMLService(conn)
 
 		h.logger.Warn("ML service connection lost, reconnecting...")
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -98,6 +103,11 @@ func (h *Handler) listenMLService(conn *websocket.Conn) {
 		}
 
 		h.logger.Info("Received response from ML service", "response", string(message))
+
+		if h.frontendHandler != nil {
+			h.frontendHandler.BroadcastToFrontend(message)
+			h.logger.Debug("ML response forwarded to frontend clients")
+		}
 	}
 }
 
@@ -188,10 +198,8 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	go h.listenClient(client)
 }
 
-// Слушаем конкретного клиента в горутине.
 func (h *Handler) listenClient(client *Client) {
 	defer func() {
-		// Когда горутина завершается - удаляем клиента из хаба
 		h.hub.RemoveClient(client.SensorID)
 
 		err := client.Conn.Close()
@@ -203,7 +211,6 @@ func (h *Handler) listenClient(client *Client) {
 		remainingClients := h.hub.GetClientCount()
 		client.Logger.Info("Sensor disconnected", "remaining_clients", remainingClients)
 
-		// Если клиентов больше не осталось - закрываем текущее обследование
 		if remainingClients == 0 {
 			ctx := context.Background()
 			if err := h.examRepo.CloseLastExamination(ctx); err != nil {
@@ -223,7 +230,7 @@ func (h *Handler) listenClient(client *Client) {
 			) {
 				client.Logger.Error("WebSocket unexpectedly closed", "error", err)
 			}
-			break // Выходим из цикла - клиент отключился
+			break 
 		}
 
 		var messageData MessageData

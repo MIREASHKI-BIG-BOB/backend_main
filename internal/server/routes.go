@@ -28,5 +28,6 @@ func (s *Server) initRouter() {
 
 	s.router.Route("/ws", func(r chi.Router) {
 		r.HandleFunc("/sensor", s.sensorHandler.HandleWebSocket)
+		r.HandleFunc("/", s.frontendHandler.HandleWebSocket)
 	})
 }
