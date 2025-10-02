@@ -1,4 +1,4 @@
-package examinations
+package repository
 
 import (
 	"context"

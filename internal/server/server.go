@@ -16,6 +16,7 @@ import (
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/domain/services"
 	"github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/database"
 	healthHandler "github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/http/health"
+	infoHandler "github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/http/info"
 	sensorsHandler "github.com/MIREASHKI-BIG-BOB/backend_main/internal/infrastructure/http/sensors"
 	sensorsUseCase "github.com/MIREASHKI-BIG-BOB/backend_main/internal/usecases/sensors"
 )
@@ -30,6 +31,7 @@ type Server struct {
 
 	healthHandler   *healthHandler.Handler
 	sensorsHandler  *sensorsHandler.Handler
+	infoHandler     *infoHandler.Handler
 	sensorHandler   *sensors.Handler
 	frontendHandler *frontend.Handler
 
@@ -90,8 +92,11 @@ func (s *Server) initServices() {
 }
 
 func (s *Server) initHandlers() {
+	infoRepo := examRepo.NewInfoRepository(s.db)
+	
 	s.healthHandler = healthHandler.New(s.healthService)
 	s.sensorsHandler = sensorsHandler.New(s.sensorsUseCase)
+	s.infoHandler = infoHandler.New(infoRepo)
 	s.frontendHandler = frontend.NewHandler(s.logger)
 	s.initSensorHandlers()
 }
